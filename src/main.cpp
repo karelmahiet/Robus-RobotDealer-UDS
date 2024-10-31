@@ -22,18 +22,19 @@ int InputDetecteObjet = 2;
 SharpIR detecteur( SharpIR::GP2Y0A21YK0F, A0);
 
 //--------------Constantes---------------
-int nbBitDroite90 = 1828;
-int nbBitGauche90 = 1850;
+int nbBitDroite90 = 1800; //1828
+int nbBitGauche90 = 1850;  //1850
 int nbBitDroite180 = 3656;
 int nbBitGauche180 = 3704;
 
-int nbBitRejoindreMilieu = 400;
+int nbBitRejoindreMilieu = 1750;
 int nbBitRejoindreLigne = 2500;
-int nbBitRejoindreBut = 2500;
+int nbBitRejoindreBut = 5500;
+
 
 float vitesseDroitRapide = 0.591;
 float vitesseGaucheRapide = 0.615;
-float vitesseDroitLent = 0.291;
+float vitesseDroitLent = 0.305;
 float vitesseGaucheLent = 0.315;
 float vitesseDroitTresLent = 0.191;
 float vitesseGaucheTresLent = 0.215;
@@ -85,7 +86,7 @@ int etatLigneMilieu = 0;
 int etatLigneDroit = 0;
 
 //------------------États-------------------
-int etat = 0; // 0:arrêt, 1:avance, 2:recule, 3:TourneDroit, 4:TourneGauche, 5:suivreLigne
+int etat = 0; // 0:arrêt, 1:avance, 2:recule, 3:TourneDroit, 4:TourneGauche, 5:suivreLigne, 6:detecterCercle
 int etatPast = 0;
 
 //-----------------Couleurs-----------------
@@ -186,26 +187,26 @@ void arret(bool resetAction){
   MOTOR_SetSpeed(RIGHT, 0);
   MOTOR_SetSpeed(LEFT, 0);
 
-  if(positionnementDeCapture)
-  {
-    positionnementDeCapture = false;
-    captureObjet = true;
-  }
-
-  if(positionnementDeDepot)
-  {
-    positionnementDeDepot = false;
-    depotObjet = true;
-  }
-
-  if(positionnementRetourMilieu)
-  {
-    positionnementRetourMilieu = false;
-    retourVersMilieu = true;
-  }
-
   if(resetAction)
   {
+    if(positionnementDeCapture)
+    {
+      positionnementDeCapture = false;
+      captureObjet = true;
+    }
+
+    if(positionnementDeDepot && etat != 6)
+    {
+      positionnementDeDepot = false;
+      depotObjet = true;
+    }
+
+    if(positionnementRetourMilieu)
+    {
+      positionnementRetourMilieu = false;
+      retourVersMilieu = true;
+    }
+
     actionChoisie = false;
     actualisationSequence();
   }
@@ -213,12 +214,51 @@ void arret(bool resetAction){
 
 void sequenceTest()
 {
-    float nouvelleSequence[10][5] = {{5, vitesseRotationRapide, vitesseDroitRapide, vitesseGaucheRapide, vide}
+    float nouvelleSequence[10][5] = {{5, vide, vide, vide, vide}
                                      };
     creerSequence(nouvelleSequence, 1);
 }
 
 void DefinirSequenceDepart(int couleurDepart)
+{
+    if (couleurDepart == 1) // Si rouge, alors avance un peu, suit la ligne et tourne à gauche de 180 degrés rendu au milieu
+    {
+        float nouvelleSequence[10][5] = {{1, vide, vitesseDroitLent, vitesseGaucheLent, nbBitRejoindreLigne},
+                                         {5, vide, vide, vide, vide},
+                                         {1, vide, vitesseDroitLent, vitesseGaucheLent, nbBitRejoindreMilieu},
+                                         {4, vitesseRotationRapide, vide, vide, nbBitGauche180}};
+        creerSequence(nouvelleSequence, 4);
+    }
+    else if (couleurDepart == 2) // Si jaune, alors avance un peu, suit la ligne et tourne à gauche de 90 degrés rendu au milieu
+    {
+        float nouvelleSequence[10][5] = {{1, vide, vitesseDroitLent, vitesseGaucheLent, nbBitRejoindreLigne},
+                                         {5, vide, vide, vide, vide},
+                                         {1, vide, vitesseDroitLent, vitesseGaucheLent, nbBitRejoindreMilieu},
+                                         {4, vitesseRotationRapide, vide, vide, nbBitGauche90}};
+        creerSequence(nouvelleSequence, 4);
+    }
+    else if (couleurDepart == 3) // Si vert, alors avance un peu, suit la ligne et tourne à droite de 90 degrés rendu au milieu
+    {
+        float nouvelleSequence[10][5] = {{1, vide, vitesseDroitLent, vitesseGaucheLent, nbBitRejoindreLigne},
+                                         {5, vide, vide, vide, vide},
+                                         {1, vide, vitesseDroitLent, vitesseGaucheLent, nbBitRejoindreMilieu},
+                                         {3, vitesseRotationRapide, vide, vide, nbBitDroite90}};
+        creerSequence(nouvelleSequence, 4);
+    }
+    else if (couleurDepart == 4) // Si bleu, alors avance un peu et suit la ligne jusqu'au milieu
+    {
+        float nouvelleSequence[10][5] = {{1, vide, vitesseDroitLent, vitesseGaucheLent, nbBitRejoindreLigne},
+                                         {5, vide, vide, vide, vide},
+                                         {1, vide, vitesseDroitLent, vitesseGaucheLent, nbBitRejoindreMilieu}};
+        creerSequence(nouvelleSequence, 3);
+    }
+    else
+    {
+        etat = 0; // État par défaut
+    }
+}
+
+/*void DefinirSequenceDepart(int couleurDepart)
 {
     float nouvelleSequence[10][5];
     int tailleSequence = 0;
@@ -228,28 +268,28 @@ void DefinirSequenceDepart(int couleurDepart)
     case 1: //Si rouge, alors avance un peu, suit la ligne et tourne à gauche de 180 degrés rendu au milieu
         nouvelleSequence[0][0] = 1; nouvelleSequence[0][1] = vide; nouvelleSequence[0][2] = vitesseDroitLent; nouvelleSequence[0][3] = vitesseGaucheLent; nouvelleSequence[0][4] = nbBitRejoindreLigne;
         nouvelleSequence[1][0] = 5; nouvelleSequence[1][1] = vitesseRotationRapide; nouvelleSequence[1][2] = vitesseDroitRapide; nouvelleSequence[1][3] = vitesseGaucheRapide; nouvelleSequence[1][4] = vide;
-        nouvelleSequence[2][0] = 2; nouvelleSequence[2][1] = vide; nouvelleSequence[2][2] = vitesseDroitTresLent; nouvelleSequence[2][3] = vitesseGaucheTresLent; nouvelleSequence[2][4] = nbBitRejoindreMilieu;
+        nouvelleSequence[2][0] = 1; nouvelleSequence[2][1] = vide; nouvelleSequence[2][2] = vitesseDroitLent; nouvelleSequence[2][3] = vitesseGaucheLent; nouvelleSequence[2][4] = nbBitRejoindreMilieu;
         nouvelleSequence[3][0] = 4; nouvelleSequence[3][1] = vitesseRotationRapide; nouvelleSequence[3][2] = vide; nouvelleSequence[3][3] = vide; nouvelleSequence[3][4] = nbBitGauche180;
         tailleSequence = 4;
         break;
     case 2: //Si jaune, alors avance un peu, suit la ligne et tourne à gauche de 90 degrés rendu au milieu
         nouvelleSequence[0][0] = 1; nouvelleSequence[0][1] = vide; nouvelleSequence[0][2] = vitesseDroitLent; nouvelleSequence[0][3] = vitesseGaucheLent; nouvelleSequence[0][4] = nbBitRejoindreLigne;
         nouvelleSequence[1][0] = 5; nouvelleSequence[1][1] = vitesseRotationRapide; nouvelleSequence[1][2] = vitesseDroitRapide; nouvelleSequence[1][3] = vitesseGaucheRapide; nouvelleSequence[1][4] = vide;
-        nouvelleSequence[2][0] = 2; nouvelleSequence[2][1] = vide; nouvelleSequence[2][2] = vitesseDroitTresLent; nouvelleSequence[2][3] = vitesseGaucheTresLent; nouvelleSequence[2][4] = nbBitRejoindreMilieu;
+        nouvelleSequence[2][0] = 1; nouvelleSequence[2][1] = vide; nouvelleSequence[2][2] = vitesseDroitLent; nouvelleSequence[2][3] = vitesseGaucheLent; nouvelleSequence[2][4] = nbBitRejoindreMilieu;
         nouvelleSequence[3][0] = 4; nouvelleSequence[3][1] = vitesseRotationRapide; nouvelleSequence[3][2] = vide; nouvelleSequence[3][3] = vide; nouvelleSequence[3][4] = nbBitGauche90;
         tailleSequence = 4;
         break;
     case 3: //Si vert, alors avance un peu, suit la ligne et tourne à droite de 90 degrés rendu au milieu
         nouvelleSequence[0][0] = 1; nouvelleSequence[0][1] = vide; nouvelleSequence[0][2] = vitesseDroitLent; nouvelleSequence[0][3] = vitesseGaucheLent; nouvelleSequence[0][4] = nbBitRejoindreLigne;
         nouvelleSequence[1][0] = 5; nouvelleSequence[1][1] = vitesseRotationRapide; nouvelleSequence[1][2] = vitesseDroitRapide; nouvelleSequence[1][3] = vitesseGaucheRapide; nouvelleSequence[1][4] = vide;
-        nouvelleSequence[2][0] = 2; nouvelleSequence[2][1] = vide; nouvelleSequence[2][2] = vitesseDroitTresLent; nouvelleSequence[2][3] = vitesseGaucheTresLent; nouvelleSequence[2][4] = nbBitRejoindreMilieu;
+        nouvelleSequence[2][0] = 1; nouvelleSequence[2][1] = vide; nouvelleSequence[2][2] = vitesseDroitLent; nouvelleSequence[2][3] = vitesseGaucheLent; nouvelleSequence[2][4] = nbBitRejoindreMilieu;
         nouvelleSequence[3][0] = 3; nouvelleSequence[3][1] = vitesseRotationRapide; nouvelleSequence[3][2] = vide; nouvelleSequence[3][3] = vide; nouvelleSequence[3][4] = nbBitDroite90;
         tailleSequence = 4;
         break;
     case 4: //Si bleu, alors avance un peu et suit la ligne jusqu'au milieu
         nouvelleSequence[0][0] = 1; nouvelleSequence[0][1] = vide; nouvelleSequence[0][2] = vitesseDroitLent; nouvelleSequence[0][3] = vitesseGaucheLent; nouvelleSequence[0][4] = nbBitRejoindreLigne;
         nouvelleSequence[1][0] = 5; nouvelleSequence[1][1] = vitesseRotationRapide; nouvelleSequence[1][2] = vitesseDroitRapide; nouvelleSequence[1][3] = vitesseGaucheRapide; nouvelleSequence[1][4] = vide;
-        nouvelleSequence[2][0] = 2; nouvelleSequence[2][1] = vide; nouvelleSequence[2][2] = vitesseDroitTresLent; nouvelleSequence[2][3] = vitesseGaucheTresLent; nouvelleSequence[2][4] = nbBitRejoindreMilieu;
+        nouvelleSequence[2][0] = 1; nouvelleSequence[2][1] = vide; nouvelleSequence[2][2] = vitesseDroitLent; nouvelleSequence[2][3] = vitesseGaucheLent; nouvelleSequence[2][4] = nbBitRejoindreMilieu;
         tailleSequence = 3;
         break;
     default:
@@ -258,14 +298,18 @@ void DefinirSequenceDepart(int couleurDepart)
     }
 
     creerSequence(nouvelleSequence, tailleSequence); //appel après le switch avec la bonne taille
-}
+}*/
 
 //Le robot scan seulement le triangle de gauche
 void lancerScan()
 {
+    delay(400);
     float nouvelleSequence[10][5] = {{4, vitesseRotationLente, vide, vide, nbBitGauche90},
+                                     {3, vitesseRotationLente, vide, vide, nbBitDroite90},
+                                     {4, vitesseRotationLente, vide, vide, nbBitGauche90},
+                                     {4, vitesseRotationLente, vide, vide, nbBitGauche90},
                                      {3, vitesseRotationLente, vide, vide, nbBitDroite90}};
-    creerSequence(nouvelleSequence, 2);
+    creerSequence(nouvelleSequence, 5);
     
     enScan = true;
 }
@@ -290,6 +334,7 @@ void scanObjet()
         float nouvelleSequence[10][5] = {{1, vide, vitesseDroitLent, vitesseGaucheLent, 10000}};
         modifierSequenceEnCours(nouvelleSequence, 1);
 
+
         enScan = false;
         rouleVersObjet = true;
     }
@@ -297,7 +342,7 @@ void scanObjet()
 
 void deplacementVersObjet()
 {
-    if(detecteur.getDistance() <= 20) //Si l'objet est à une distance de 10 cm ou moins
+    if(detecteur.getDistance() <= 25) //Si l'objet est à une distance de 10 cm ou moins
     {
           //modification de la séquence en cours pour que le robot avance un peu vers l'avant (nécessaire?) et capture l'objet
 
@@ -328,23 +373,19 @@ void capturerObjet()
 
 void livraisonObjet()
 {
-  Serial.println("avantSequence");
   Serial.println(nbBitTranslationVersObjet);
   Serial.println(nbBitRotationScan);
-   float nouvelleSequence[10][5] = {{2, vide, vitesseDroitRapide, vitesseGaucheRapide, nbBitTranslationVersObjet },
-                                    {directionRotationLivraison, vitesseRotationRapide, vide, vide, nbBitRotationScan},
-                                    {1, vide, vitesseDroitRapide, vitesseGaucheRapide, nbBitRejoindreLigne},
-                                    {5, vitesseRotationRapide, vitesseDroitRapide, vitesseGaucheRapide, vide},
-                                    {1, vide, vitesseDroitRapide, vitesseGaucheRapide, nbBitRejoindreBut},
+   float nouvelleSequence[10][5] = {{6, vide, vide, vide, vide},
+                                    {3, vitesseRotationLente, vide, vide, 900},
+                                    // {1, vide, vitesseDroitLent, vitesseGaucheLent, nbBitRejoindreLigne},
+                                    // {5, vide, vide, vide, vide},
+                                    // {1, vide, vitesseDroitLent, vitesseGaucheLent, nbBitRejoindreBut},
+                                    {1, vide, vitesseDroitLent, vitesseGaucheLent, 14000},
                                     {0, vide, vide, vide, vide}};
-    modifierSequenceEnCours(nouvelleSequence, 6);
-
- Serial.println("apresSequence");
+    modifierSequenceEnCours(nouvelleSequence, 4);
 
     livreObjet = false;
     positionnementDeDepot = true;
-
-    
 }
 
 void deposerObjet()
@@ -364,9 +405,9 @@ void deposerObjet()
     SERVO_Disable(0);
     SERVO_Disable(1);
 
-    float nouvelleSequence[10][5] = {{2, vide, vitesseDroitRapide, vitesseGaucheRapide, nbBitRejoindreMilieu},
+    float nouvelleSequence[10][5] = {{2, vide, vitesseDroitLent, vitesseGaucheLent, nbBitRejoindreBut},
                                      {0, vide, vide, vide, vide}};
-    creerSequence(nouvelleSequence, 2);
+    modifierSequenceEnCours(nouvelleSequence, 2);
 
     depotObjet = false;
     positionnementRetourMilieu = true;
@@ -374,34 +415,40 @@ void deposerObjet()
 
 void retournerAuMilieu()
 {
+  ENCODER_Reset(0);
+  ENCODER_Reset(1);
+
+  Serial.println("retour");
       if(couleurEnCours == 1) //Si est sur rouge
       {
+        Serial.println("rouge1");
           float nouvelleSequence[10][5] = {{4, vitesseRotationRapide, vide, vide, nbBitGauche180},
-                                       {1, vide, vitesseDroitRapide, vitesseGaucheRapide, nbBitRejoindreLigne},
-                                       {5, vitesseRotationRapide, vitesseDroitRapide, vitesseGaucheRapide, vide},
-                                       {1, vide, vitesseDroitRapide, vitesseGaucheRapide, nbBitRejoindreMilieu},
+                                       {1, vide, vitesseDroitLent, vitesseGaucheLent, nbBitRejoindreLigne},
+                                       {5, vide, vide, vide, vide},
+                                       {1, vide, vitesseDroitLent, vitesseGaucheLent, nbBitRejoindreMilieu},
                                        {3, vitesseRotationRapide, vide, vide, nbBitDroite90},
                                        {0, vide, vide, vide, vide}};
-          creerSequence(nouvelleSequence, 6);
+          modifierSequenceEnCours(nouvelleSequence, 6);
       }
       else if(couleurEnCours == 3) //Si est sur vert
       {
           float nouvelleSequence[10][5] = {{4, vitesseRotationRapide, vide, vide, nbBitGauche180},
-                                       {1, vide, vitesseDroitRapide, vitesseGaucheRapide, nbBitRejoindreLigne},
-                                       {5, vitesseRotationRapide, vitesseDroitRapide, vitesseGaucheRapide, vide},
-                                       {1, vide, vitesseDroitRapide, vitesseGaucheRapide, nbBitRejoindreMilieu},
+                                       {1, vide, vitesseDroitLent, vitesseGaucheLent, nbBitRejoindreLigne},
+                                       {5, vide, vide, vide, vide},
+                                       {1, vide, vitesseDroitLent, vitesseGaucheLent, nbBitRejoindreMilieu},
                                        {4, vitesseRotationRapide, vide, vide, nbBitGauche90},
                                        {0, vide, vide, vide, vide}};
-          creerSequence(nouvelleSequence, 6);
+          modifierSequenceEnCours(nouvelleSequence, 6);
       }
       else //Si est sur jaune ou bleu
       {
+        Serial.println("else1");
           float nouvelleSequence[10][5] = {{4, vitesseRotationRapide, vide, vide, nbBitGauche180},
-                                       {1, vide, vitesseDroitRapide, vitesseGaucheRapide, nbBitRejoindreLigne},
-                                       {5, vitesseRotationRapide, vitesseDroitRapide, vitesseGaucheRapide, vide},
-                                       {1, vide, vitesseDroitRapide, vitesseGaucheRapide, nbBitRejoindreMilieu},
+                                       {1, vide, vitesseDroitLent, vitesseGaucheLent, nbBitRejoindreLigne},
+                                       {5, vide, vide, vide, vide},
+                                       {1, vide, vitesseDroitLent, vitesseGaucheLent, nbBitRejoindreMilieu},
                                        {0, vide, vide, vide, vide}};
-          creerSequence(nouvelleSequence, 5);
+          modifierSequenceEnCours(nouvelleSequence, 5);
       }
       
       retourVersMilieu = false;
@@ -451,7 +498,7 @@ void avance(){
 
   encodeurDroite = ENCODER_Read(1);
 
-  if(rouleVersObjet)
+  if(rouleVersObjet||captureObjet)
   {
     nbBitTranslationVersObjet = encodeurDroite;
   }
@@ -461,25 +508,25 @@ void avance(){
     ENCODER_Reset(0);
     ENCODER_Reset(1);
     arret(false);
-    delay(150);
+    delay(100);
     actionChoisie = false;
     actualisationSequence();
   }
 };
 
 void recule(){
-  Serial.println("recule");
+ 
   MOTOR_SetSpeed(RIGHT, -vitesseDroit);
   MOTOR_SetSpeed(LEFT, -vitesseGauche);
 
   encodeurDroite = ENCODER_Read(1);
 
-  if(encodeurDroite > nbBitMouvement && etat != 5)
+  if(encodeurDroite < -nbBitMouvement && etat != 5 && etat != 6)
   {
     ENCODER_Reset(0);
     ENCODER_Reset(1);
     arret(false);
-    delay(150);
+    delay(100);
     actionChoisie = false;
     actualisationSequence();
   }
@@ -501,7 +548,7 @@ void tourneDroit(){
     ENCODER_Reset(0);
     ENCODER_Reset(1);
     arret(false);
-    delay(150);
+    delay(100);
     nbBitRotationScan = 0;
     actionChoisie = false;
     actualisationSequence();
@@ -524,7 +571,7 @@ void tourneGauche(){
     ENCODER_Reset(0);
     ENCODER_Reset(1);
     arret(false);
-    delay(150);
+    delay(100);
     nbBitRotationScan = 0;
     actionChoisie = false;
     actualisationSequence();
@@ -609,6 +656,25 @@ int detecterCouleur()
     return couleur;
 }
 
+void detecterCercle()
+{
+   etatLigneDroit = analogRead(PinLigneDroit);
+   etatLigneMilieu = analogRead(PinLigneMilieu);
+   etatLigneGauche = analogRead(PinLigneGauche);
+
+    vitesseDroit = vitesseDroitLent;
+    vitesseGauche = vitesseGaucheLent;
+    recule();
+
+   if(etatLigneGauche > limiteDetectionCouleur && etatLigneMilieu > limiteDetectionCouleur && etatLigneDroit > limiteDetectionCouleur)
+   {//Noir, Noir, Noir: arrête
+
+       arret(true);
+       delay(150);      
+       ENCODER_Reset(0);
+       ENCODER_Reset(1);
+   }
+}
 
 void suivreLigne()
 {
@@ -616,16 +682,25 @@ void suivreLigne()
     etatLigneMilieu = analogRead(PinLigneMilieu);
     etatLigneGauche = analogRead(PinLigneGauche);
         if(etatLigneGauche > limiteDetectionCouleur && etatLigneDroit < limiteDetectionCouleur)
-        {//Noir, Noir, Blanc: tourne à gauche
+        {//Noir, X, Blanc: tourne à gauche
             vitesseDroit = vitesseDroitLent;
             vitesseGauche = vitesseGaucheTresLent;
             avance();
         }
         else if(etatLigneGauche < limiteDetectionCouleur && etatLigneDroit > limiteDetectionCouleur)
-        {//Blanc, Noir, Noir: tourne à droite
+        {//Blanc, X, Noir: tourne à droite
             vitesseDroit = vitesseDroitTresLent;
             vitesseGauche = vitesseGaucheLent;
             avance();
+        }
+        else if(etatLigneGauche > limiteDetectionCouleur && etatLigneMilieu > limiteDetectionCouleur
+                && etatLigneDroit > limiteDetectionCouleur)
+        {//Noir, Noir, Noir: arrête
+             delay(150);
+             arret(true);
+             ENCODER_Reset(0);
+             ENCODER_Reset(1);
+             estAuMilieu = true;
         }
         else
         {//Blanc, Noir, Blanc
@@ -635,20 +710,23 @@ void suivreLigne()
         }
 
     int couleurPresente = detecterCouleur();
-    if(couleurPresente != 5)
+    if(couleurPresente != 5 && couleurPresente != 0)
     {
-        if(couleurPresente == 0)
+        /*if(couleurPresente == 0)
         {
             estAuMilieu = true;
-        }
+        }*/
         arret(true);
         delay(150);
+        ENCODER_Reset(0);
+        ENCODER_Reset(1);
     }
 }
 
 void test()
 {
-   float nouvelleSequence[10][5] = {{2, vide, vitesseDroitLent, vitesseGaucheLent, nbBitRejoindreMilieu},
+   float nouvelleSequence[10][5] = {{3, vitesseRotationLente, vide, vide, 900},
+                                   {1, vide, vitesseDroitLent, vitesseGaucheLent, 15000},
                                      {0, vide, vide, vide, vide}};
     creerSequence(nouvelleSequence, 2);
 }
@@ -683,15 +761,13 @@ void setup()
 
 void loop()
 {
-  int cicle=0;
-  if (cicle == 0)
-  {
   etatPast = etat;
   if (estAuDepart && (analogRead(PinSon) >= 550 || ROBUS_IsBumper(3))){
       beep(2);
       estAuDepart = false;
       DefinirSequenceDepart(detecterCouleur());
-      //test();
+      //DefinirSequenceDepart(3);
+      // test();
 
       //Ouverture des portes initiale
       SERVO_SetAngle(0, 60);
@@ -700,6 +776,8 @@ void loop()
       //Étteindre les servomoteurs
       SERVO_Disable(0);
       SERVO_Disable(1);
+
+      
   }
 
   if(!actionChoisie)
@@ -734,6 +812,9 @@ void loop()
     case 5:
       suivreLigne();
       break;      
+    case 6:
+      detecterCercle();
+      break;
     default:
       avance();
       etat = 1;
@@ -742,7 +823,4 @@ void loop()
   }
 
   delay(200); 
-
-  cicle++;
-  }
 }
