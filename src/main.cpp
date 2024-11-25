@@ -1,8 +1,8 @@
 /*
-Projet: MegaGénial
+Projet: MegaGéniale
 Auteurs: Équipe P15
 Description: Algorithme du dealer
-Date: 21 novembre 2024
+Date: 25 novembre 2024
 */
 
 #include <Arduino.h>
@@ -15,7 +15,8 @@ Date: 21 novembre 2024
 #define commonAnode true
 byte gammatable[256];
 Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_4X);
-LiquidCrystal lcd(8, 9, 2, 3, 4, 7);;
+LiquidCrystal lcd(8, 9, 2, 3, 4, 7);
+;
 int lastState1 = HIGH, lastState2 = HIGH, lastState3 = HIGH;
 
 //--------------Constantes---------------
@@ -46,7 +47,7 @@ int nbArretsTour3 = 0;
 
 //----------------Variables BlackJack----------------
 int nbJoueurs = 0;
-int joueurActif = 5; //commence au Dealer
+int joueurActif = 5; // commence au Dealer
 
 int nbToursEffectue = 0;
 
@@ -85,12 +86,14 @@ int limitedetectionCarte = 150;
 int32_t encodeurGauche = 0;
 int32_t encodeurDroite = 0;
 
-void beepAncien(int count){
-  for(int i=0;i<count;i++){
+void beepAncien(int count)
+{
+  for (int i = 0; i < count; i++)
+  {
     AX_BuzzerON();
     delay(100);
     AX_BuzzerOFF();
-    delay(100);  
+    delay(100);
   }
   delay(400);
 }
@@ -98,8 +101,6 @@ void beepAncien(int count){
 void beep(int hauteur)
 {
   AX_BuzzerON(hauteur, 100);
-  delay(200);
-  AX_BuzzerOFF();
 }
 
 bool boutonAppuye(int pin, int &lastState)
@@ -157,7 +158,7 @@ int detectionCarte()
     Serial.print((int)b, HEX);
     Serial.println();
 
-    //COULEUR: rouge=11, orange=2, jaune=3, vert=4, bleu=5, mauve=6, rose=7, brun=8, beige=9, blanc=10
+    // COULEUR: rouge=11, orange=2, jaune=3, vert=4, bleu=5, mauve=6, rose=7, brun=8, beige=9, blanc=10
 
     if (red > 1100 && red < 1450 && green > 450 && green < 700 && blue > 500 && blue < 800)
     {
@@ -233,29 +234,29 @@ int detectionCarte()
 
 void deposerCarte(int valeur)
 {
-   //Gère le pointage
-    bool estAs = false;
+  // Gère le pointage
+  bool estAs = false;
 
-    if(valeur == 11)
-    {
-        estAs = true;
-    }
+  if (valeur == 11)
+  {
+    estAs = true;
+  }
 
-    scores[joueurActif-1] += valeur;
-    if(estAs)
-    {
-      nbAsJoueurs[joueurActif-1] += 1;
-    }
-    if(scores[joueurActif-1] > 21 && nbAsJoueurs[joueurActif-1] >= 1)
-    {
-        scores[joueurActif-1] -= 10;
-        nbAsJoueurs[joueurActif-1] --;
-    }
+  scores[joueurActif - 1] += valeur;
+  if (estAs)
+  {
+    nbAsJoueurs[joueurActif - 1] += 1;
+  }
+  if (scores[joueurActif - 1] > 21 && nbAsJoueurs[joueurActif - 1] >= 1)
+  {
+    scores[joueurActif - 1] -= 10;
+    nbAsJoueurs[joueurActif - 1]--;
+  }
 
-    //Depose 1 carte
-    analogWrite(PinMoteur, 125);
-    delay(2000);
-    analogWrite(PinMoteur, 0);
+  // Depose 1 carte
+  analogWrite(PinMoteur, 125);
+  delay(2000);
+  analogWrite(PinMoteur, 0);
 }
 
 int calculerNbJoueurs()
@@ -267,11 +268,11 @@ int calculerNbJoueurs()
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Nb de joueurs?");
+  lcd.setCursor(0, 1);
+  lcd.print(nbJoueurs);
 
   while (true)
   {
-    lcd.setCursor(0, 1);
-    lcd.print(nbJoueurs);
 
     if (boutonAppuye(bouton1, lastState1))
     {
@@ -284,6 +285,13 @@ int calculerNbJoueurs()
       delay(100); // B5
       beep(1047);
       delay(300); // C6
+      AX_BuzzerOFF();
+
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Nb de joueurs?");
+      lcd.setCursor(0, 1);
+      lcd.print(nbJoueurs);
 
       if (nbJoueurs > maxJoueurs)
       {
@@ -294,6 +302,13 @@ int calculerNbJoueurs()
         delay(300); // A3
         beep(196);
         delay(400); // G3
+        AX_BuzzerOFF();
+
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("Nb de joueurs?");
+        lcd.setCursor(0, 1);
+        lcd.print(nbJoueurs);
       }
     }
 
@@ -308,6 +323,13 @@ int calculerNbJoueurs()
       delay(100); // A5
       beep(784);
       delay(300); // G5
+      AX_BuzzerOFF();
+
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Nb de joueurs?");
+      lcd.setCursor(0, 1);
+      lcd.print(nbJoueurs);
 
       if (nbJoueurs < minJoueurs)
       {
@@ -318,6 +340,13 @@ int calculerNbJoueurs()
         delay(300); // A3
         beep(196);
         delay(400); // G3
+        AX_BuzzerOFF();
+
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("Nb de joueurs?");
+        lcd.setCursor(0, 1);
+        lcd.print(nbJoueurs);
       }
     }
 
@@ -331,6 +360,7 @@ int calculerNbJoueurs()
       delay(100); // E5
       beep(587);
       delay(200); // D5
+      AX_BuzzerOFF();
 
       lcd.clear();
       lcd.setCursor(0, 0);
@@ -346,7 +376,6 @@ int calculerNbJoueurs()
   }
 }
 
-
 // gère tour joueur
 void demanderCarte()
 {
@@ -356,7 +385,7 @@ void demanderCarte()
   lcd.print(joueurActif);
   lcd.setCursor(0, 1);
   lcd.print("Score: ");
-  lcd.print(scores[joueurActif-1]);
+  lcd.print(scores[joueurActif - 1]);
   delay(2000);
 
   while (true)
@@ -373,7 +402,7 @@ void demanderCarte()
 
       int carte = detectionCarte();
       deposerCarte(carte);
-      int nouveauScore = scores[joueurActif-1];
+      int nouveauScore = scores[joueurActif - 1];
 
       lcd.clear();
       lcd.setCursor(0, 0);
@@ -390,6 +419,11 @@ void demanderCarte()
         lcd.setCursor(0, 0);
         lcd.print("BUSTED!");
         delay(1500);
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("Tour termine!");
+        delay(1500);
+        break;
       }
     }
     else if (boutonAppuye(bouton2, lastState2))
@@ -452,6 +486,7 @@ void afficherGagnants()
       delay(200); // A4
       delay(200); // Pause
       delay(2000);
+      AX_BuzzerOFF();
     }
   }
 
@@ -504,6 +539,7 @@ void afficherGagnants()
     delay(300); // E6
     delay(150); // Pause
     delay(2000);
+    AX_BuzzerOFF();
   }
 }
 
@@ -521,7 +557,7 @@ void jouerLuigi()
   deposerCarte(detectionCarte());
   delay(400);
 
-  while (scores[joueurActif-1] < 17)
+  while (scores[joueurActif - 1] < 17)
   {
     lcd.clear();
     lcd.setCursor(0, 0);
@@ -532,13 +568,13 @@ void jouerLuigi()
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print("Luigi: ");
-    lcd.print(scores[joueurActif-1]);
+    lcd.print(scores[joueurActif - 1]);
     delay(1000);
   }
 
   lcd.clear();
   lcd.setCursor(0, 0);
-  if (scores[joueurActif-1] > 21)
+  if (scores[joueurActif - 1] > 21)
   {
     lcd.print("Luigi bust!");
   }
@@ -549,18 +585,20 @@ void jouerLuigi()
   delay(2000);
 }
 
-void arret(){
+void arret()
+{
   MOTOR_SetSpeed(RIGHT, 0);
   MOTOR_SetSpeed(LEFT, 0);
 };
 
-void avance(){
+void avance()
+{
   MOTOR_SetSpeed(RIGHT, vitesseDroit);
   MOTOR_SetSpeed(LEFT, vitesseGauche);
 
   encodeurDroite = ENCODER_Read(1);
 
-  if(encodeurDroite > nbBitMouvement && etat != 5)
+  if (encodeurDroite > nbBitMouvement && etat != 5)
   {
     ENCODER_Reset(0);
     ENCODER_Reset(1);
@@ -571,14 +609,15 @@ void avance(){
   }
 };
 
-void recule(){
- 
+void recule()
+{
+
   MOTOR_SetSpeed(RIGHT, -vitesseDroit);
   MOTOR_SetSpeed(LEFT, -vitesseGauche);
 
   encodeurDroite = ENCODER_Read(1);
 
-  if(encodeurDroite < -nbBitMouvement)
+  if (encodeurDroite < -nbBitMouvement)
   {
     ENCODER_Reset(0);
     ENCODER_Reset(1);
@@ -587,29 +626,30 @@ void recule(){
   }
 };
 
-void tourneDroit(){
+void tourneDroit()
+{
   MOTOR_SetSpeed(RIGHT, -vitesseRotation);
   MOTOR_SetSpeed(LEFT, vitesseRotation);
 
   encodeurGauche = ENCODER_Read(0);
 
-  if(encodeurGauche > nbBitMouvement && etat !=5)
+  if (encodeurGauche > nbBitMouvement && etat != 5)
   {
     ENCODER_Reset(0);
     ENCODER_Reset(1);
     arret();
     delay(100);
   }
-  
 };
 
-void tourneGauche(){
+void tourneGauche()
+{
   MOTOR_SetSpeed(RIGHT, vitesseRotation);
   MOTOR_SetSpeed(LEFT, -vitesseRotation);
 
   encodeurDroite = ENCODER_Read(1);
 
-  if(encodeurDroite > nbBitMouvement)
+  if (encodeurDroite > nbBitMouvement)
   {
     ENCODER_Reset(0);
     ENCODER_Reset(1);
@@ -620,225 +660,223 @@ void tourneGauche(){
 
 void resetAlgo()
 {
-    etatPast = 0;
-    etat = 0;
-    nbBitMouvement = 0;
-    vitesseDroit = 0;
-    vitesseGauche = 0;
-    vitesseRotation = 0;
+  etatPast = 0;
+  etat = 0;
+  nbBitMouvement = 0;
+  vitesseDroit = 0;
+  vitesseGauche = 0;
+  vitesseRotation = 0;
 
-    nbArretsTour3 = 0;
+  nbArretsTour3 = 0;
 
-    //----------------Variables BlackJack----------------
-    nbJoueurs = 0;
-    joueurActif = 5; //commence au Dealer
+  //----------------Variables BlackJack----------------
+  nbJoueurs = 0;
+  joueurActif = 5; // commence au Dealer
 
-    nbToursEffectue = 0;
+  nbToursEffectue = 0;
 
-    for(int i = 0; i < 5; i++)
-    {
-      scores[i] = 0;
-      nbAsJoueurs[i] = 0;
-    }
+  for (int i = 0; i < 5; i++)
+  {
+    scores[i] = 0;
+    nbAsJoueurs[i] = 0;
+  }
 
-    //----------------Booléens----------------
-    estAuDepart = true;
-    actionChoisie = false;
-    estEnPause = false;
+  //----------------Booléens----------------
+  estAuDepart = true;
+  actionChoisie = false;
+  estEnPause = false;
 
-    //------------------Pins-------------------
-    etatLigneGauche = 0;
-    etatLigneMilieu = 0;
-    etatLigneDroit = 0;
+  //------------------Pins-------------------
+  etatLigneGauche = 0;
+  etatLigneMilieu = 0;
+  etatLigneDroit = 0;
 
-    //-----------------Encodeurs-----------------
-    encodeurGauche = 0;
-    encodeurDroite = 0;
+  //-----------------Encodeurs-----------------
+  encodeurGauche = 0;
+  encodeurDroite = 0;
 
-    lcd.begin(16, 2);
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("Bienvenue chez");
-    lcd.setCursor(0, 1);
-    lcd.print("Luigi!");
-    delay(2000);
+  lcd.begin(16, 2);
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Bienvenue chez");
+  lcd.setCursor(0, 1);
+  lcd.print("Luigi!");
+  delay(2000);
 
-    randomSeed(analogRead(A0));
+  randomSeed(analogRead(A0));
 
-    delay(100);
-    beepAncien(3);
+  delay(100);
+  beepAncien(3);
 }
 
 void detecterLigneNoire()
 {
-   etatLigneDroit = analogRead(PinLigneDroit);
-   etatLigneMilieu = analogRead(PinLigneMilieu);
-   etatLigneGauche = analogRead(PinLigneGauche);
+  etatLigneDroit = analogRead(PinLigneDroit);
+  etatLigneMilieu = analogRead(PinLigneMilieu);
+  etatLigneGauche = analogRead(PinLigneGauche);
 
-   if(etatLigneGauche > limitedetectionCarte && etatLigneMilieu > limitedetectionCarte && etatLigneDroit > limitedetectionCarte)
-   {//Noir, Noir, Noir
-        ENCODER_Reset(0);
-        ENCODER_Reset(1);
-        arret();
-        delay(100);
-   }
+  if (etatLigneGauche > limitedetectionCarte && etatLigneMilieu > limitedetectionCarte && etatLigneDroit > limitedetectionCarte)
+  { // Noir, Noir, Noir
+    ENCODER_Reset(0);
+    ENCODER_Reset(1);
+    arret();
+    delay(100);
+  }
 }
 
 bool joueurActifPeutJouer()
 {
-   bool peutJouer = true;
+  bool peutJouer = true;
 
-   switch (joueurActif)
+  switch (joueurActif)
+  {
+  case 1:
+    if (scores[joueurActif - 1] >= 21 && nbJoueurs < 1)
     {
-    case 1:
-      if(scores[joueurActif-1] >= 21 && nbJoueurs < 1)
-      {
-          peutJouer = false;
-      }
-      return peutJouer;
-      break;
-    case 2:
-      if(scores[joueurActif-1] >= 21 && nbJoueurs < 2)
-      {
-          peutJouer = false;
-      }
-      return peutJouer;
-      break;
-    case 3:
-      if(scores[joueurActif-1] >= 21 && nbJoueurs < 3)
-      {
-          peutJouer = false;
-      }
-      return peutJouer;
-      break;
-    case 4:
-      if(scores[joueurActif-1] >= 21 && nbJoueurs < 4)
-      {
-          peutJouer = false;
-      }
-      return peutJouer;
-      break;
-
-    default:
       peutJouer = false;
-      return peutJouer;
-      break;
     }
+    return peutJouer;
+    break;
+  case 2:
+    if (scores[joueurActif - 1] >= 21 && nbJoueurs < 2)
+    {
+      peutJouer = false;
+    }
+    return peutJouer;
+    break;
+  case 3:
+    if (scores[joueurActif - 1] >= 21 && nbJoueurs < 3)
+    {
+      peutJouer = false;
+    }
+    return peutJouer;
+    break;
+  case 4:
+    if (scores[joueurActif - 1] >= 21 && nbJoueurs < 4)
+    {
+      peutJouer = false;
+    }
+    return peutJouer;
+    break;
+
+  default:
+    peutJouer = false;
+    return peutJouer;
+    break;
+  }
 }
 
 void gererDistribution()
 {
-   /*++joueurActif;
+  /*++joueurActif;
 
-   if(joueurActifPeutJouer())
-   {
-       if(nbToursEffectue == 0 && joueurActif != 5)
+  if(joueurActifPeutJouer())
+  {
+      if(nbToursEffectue == 0 && joueurActif != 5)
+      {
+        lcd.clear();
+        lcd.write("J"[joueurActif-1]);
+        deposerCarte(detectionCarte());
+        delay(400);
+        deposerCarte(detectionCarte());
+      }
+      else if(nbToursEffectue == 1)
+      {
+       if(joueurActif != 5)
        {
          lcd.clear();
          lcd.write("J"[joueurActif-1]);
-         deposerCarte(detectionCarte());
-         delay(400);
-         deposerCarte(detectionCarte());
+         demanderCarte();
        }
-       else if(nbToursEffectue == 1)
+       else
        {
-        if(joueurActif != 5)
-        {
-          lcd.clear();
-          lcd.write("J"[joueurActif-1]);
-          demanderCarte();
-        }
-        else
-        {
-          lcd.clear();
-          lcd.write("Dealer");
-          jouerLuigi();
-        }
+         lcd.clear();
+         lcd.write("Dealer");
+         jouerLuigi();
        }
-   }
+      }
+  }
 
-   if(joueurActif == 5) //Le Dealer
-   {
-      ++nbToursEffectue;
-      joueurActif = 0; //reset
-   }
+  if(joueurActif == 5) //Le Dealer
+  {
+     ++nbToursEffectue;
+     joueurActif = 0; //reset
+  }
 
-   if(nbToursEffectue == 2)
-   {
-     afficherGagnants();
-   }*/
+  if(nbToursEffectue == 2)
+  {
+    afficherGagnants();
+  }*/
 
-   /*etat = 1;
-   vitesseDroit = vitesseDroitRapide;
-   vitesseGauche = vitesseGaucheRapide;
-   nbBitMouvement = 100;
-   ENCODER_Reset(0);
-   ENCODER_Reset(1);*/
+  /*etat = 1;
+  vitesseDroit = vitesseDroitRapide;
+  vitesseGauche = vitesseGaucheRapide;
+  nbBitMouvement = 100;
+  ENCODER_Reset(0);
+  ENCODER_Reset(1);*/
 
-   delay(600);
-   vitesseDroit = vitesseDroitLent;
-   vitesseGauche = vitesseGaucheLent;
-   avance();
-   delay(600);
-   etat = 5;
+  delay(600);
+  vitesseDroit = vitesseDroitLent;
+  vitesseGauche = vitesseGaucheLent;
+  avance();
+  delay(600);
+  etat = 5;
 }
 
 void suivreLigne()
 {
-    etatLigneDroit = analogRead(PinLigneDroit);
-    etatLigneMilieu = analogRead(PinLigneMilieu);
-    etatLigneGauche = analogRead(PinLigneGauche);
+  etatLigneDroit = analogRead(PinLigneDroit);
+  etatLigneMilieu = analogRead(PinLigneMilieu);
+  etatLigneGauche = analogRead(PinLigneGauche);
 
-    if(etatLigneGauche > limitedetectionCarte && etatLigneDroit < limitedetectionCarte)
-    {//Noir, X, Blanc: tourne vers la gauche
-        vitesseDroit = vitesseDroitRapide;
-        vitesseGauche = 0;
-        avance();
+  if (etatLigneGauche > limitedetectionCarte && etatLigneDroit < limitedetectionCarte)
+  { // Noir, X, Blanc: tourne vers la gauche
+    vitesseDroit = vitesseDroitRapide;
+    vitesseGauche = 0;
+    avance();
+  }
+  else if (etatLigneGauche < limitedetectionCarte && etatLigneDroit > limitedetectionCarte)
+  { // Blanc, X, Noir: tourne vers la droite
+    vitesseDroit = 0;
+    vitesseGauche = vitesseGaucheRapide;
+    avance();
+  }
+  else if (etatLigneGauche < limitedetectionCarte && etatLigneMilieu > limitedetectionCarte && etatLigneDroit < limitedetectionCarte)
+  { // Blanc, Noir, Blanc: avance tout droit
+    vitesseDroit = vitesseDroitRapide;
+    vitesseGauche = vitesseGaucheRapide;
+    avance();
+  }
+  else if (etatLigneGauche > limitedetectionCarte && etatLigneMilieu > limitedetectionCarte && etatLigneDroit > limitedetectionCarte)
+  {                           // Noir, Noir, Noir
+    if (nbToursEffectue != 2) // Dépose les cartes
+    {
+      arret();
+      etat = 6;
     }
-    else if(etatLigneGauche < limitedetectionCarte && etatLigneDroit > limitedetectionCarte)
-    {//Blanc, X, Noir: tourne vers la droite
-        vitesseDroit = 0;
-        vitesseGauche = vitesseGaucheRapide;
-        avance();
-    }
-    else if(etatLigneGauche < limitedetectionCarte && etatLigneMilieu > limitedetectionCarte
-            && etatLigneDroit < limitedetectionCarte)
-    {//Blanc, Noir, Blanc: avance tout droit 
-        vitesseDroit = vitesseDroitRapide;
-        vitesseGauche = vitesseGaucheRapide;
-        avance();
-    }
-    else if(etatLigneGauche > limitedetectionCarte && etatLigneMilieu > limitedetectionCarte
-            && etatLigneDroit > limitedetectionCarte)
-    {//Noir, Noir, Noir
-        if(nbToursEffectue != 2) //Dépose les cartes
-          {
-              arret();
-              etat = 6;
-          }
-          else //Ne s'arrête pas
-          {
-              ++nbArretsTour3;
-              if(nbArretsTour3 == 5)
-              {
-                  arret();
-                  etat = 0;
-                  resetAlgo();
-              }
-              else
-              {
-                  vitesseDroit = vitesseDroitRapide;
-                  vitesseGauche = vitesseGaucheRapide;
-                  avance();
-              }
-          }
-    }
-    else
-    {//Avance tout droit
+    else // Ne s'arrête pas
+    {
+      ++nbArretsTour3;
+      if (nbArretsTour3 == 5)
+      {
+        arret();
+        etat = 0;
+        resetAlgo();
+      }
+      else
+      {
         vitesseDroit = vitesseDroitRapide;
         vitesseGauche = vitesseGaucheRapide;
         avance();
+      }
     }
+  }
+  else
+  { // Avance tout droit
+    vitesseDroit = vitesseDroitRapide;
+    vitesseGauche = vitesseGaucheRapide;
+    avance();
+  }
 }
 
 void setup()
@@ -855,20 +893,23 @@ void setup()
   pinMode(blue, OUTPUT);
   pinMode(green, OUTPUT);
 
-    for (int i = 0; i < 256; i++)
-    {
-        float x = i;
-        x /= 255;
-        x = pow(x, 2.5);
-        x *= 255;
+  for (int i = 0; i < 256; i++)
+  {
+    float x = i;
+    x /= 255;
+    x = pow(x, 2.5);
+    x *= 255;
 
-        if (commonAnode) {
-            gammatable[i] = 255 - x;
-        } else {
-            gammatable[i] = x;
-        }
-      Serial.println(gammatable[i]);
+    if (commonAnode)
+    {
+      gammatable[i] = 255 - x;
     }
+    else
+    {
+      gammatable[i] = x;
+    }
+    Serial.println(gammatable[i]);
+  }
 
   lcd.begin(16, 2);
   lcd.clear();
@@ -887,39 +928,45 @@ void setup()
 void loop()
 {
   etatPast = etat;
-  if (estAuDepart){
-      beepAncien(2);
-      estAuDepart = false;
-      nbJoueurs = calculerNbJoueurs();
-
-      //Dépose une carte pour le Dealer
-       lcd.clear();
-       lcd.write("Dealer");
-       deposerCarte(detectionCarte());
-       lcd.clear();
-       lcd.write("Allons-y!");
-
-       joueurActif = 0;
-       etat = 5;
-  }
-
-  if(boutonAppuye(bouton3, lastState3) && !estEnPause && !estAuDepart)
+  if (estAuDepart)
   {
-      estEnPause = true;
-      while(estEnPause)
-      {
-          if(boutonAppuye(bouton3, lastState3))
-          {
-            estEnPause = false;
-          }
-      }
+    beepAncien(2);
+    estAuDepart = false;
+    nbJoueurs = calculerNbJoueurs();
+
+    // Dépose une carte pour le Dealer
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.write("Dealer...");
+    deposerCarte(detectionCarte());
+    lcd.clear();
+    lcd.write("Distribution");
+    lcd.setCursor(0, 1);
+    lcd.write("initiale...");
+
+    joueurActif = 0;
+    etat = 5;
   }
 
-  if (etatPast != etat){ //fait une pause minimale entre les changements d'état
+  if (boutonAppuye(bouton3, lastState3) && !estEnPause && !estAuDepart)
+  {
+    estEnPause = true;
+    while (estEnPause)
+    {
+      if (boutonAppuye(bouton3, lastState3))
+      {
+        estEnPause = false;
+      }
+    }
+  }
+
+  if (etatPast != etat)
+  { // fait une pause minimale entre les changements d'état
     arret();
     delay(50);
   }
-  else{
+  else
+  {
     switch (etat)
     {
     case 0:
@@ -936,19 +983,19 @@ void loop()
       break;
     case 4:
       tourneGauche();
-      break;     
+      break;
     case 5:
       suivreLigne();
-      break;      
+      break;
     case 6:
       gererDistribution();
       break;
     default:
       avance();
       etat = 1;
-    break;
+      break;
     }
   }
 
-  delay(200); 
+  delay(200);
 }
