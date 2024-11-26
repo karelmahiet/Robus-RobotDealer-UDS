@@ -15,7 +15,7 @@ Date: 25 novembre 2024
 #define commonAnode true
 byte gammatable[256];
 Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_4X);
-LiquidCrystal lcd(8, 9, 2, 3, 4, 7);
+LiquidCrystal lcd(10, 11, 38, 39, 40, 41);
 ;
 int lastState1 = HIGH, lastState2 = HIGH, lastState3 = HIGH;
 
